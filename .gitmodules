@@ -1,0 +1,6 @@
+[submodule "lazperf"]
+	path = lazperf
+	url = https://github.com/hobuinc/laz-perf.git
+[submodule "cnpy"]
+	path = cnpy
+	url = https://github.com/rogersce/cnpy.git
