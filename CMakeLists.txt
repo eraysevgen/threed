@@ -24,7 +24,8 @@ include_directories(
 find_package(Boost REQUIRED COMPONENTS program_options filesystem REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
-#find_package(nanoflann)
+find_package(nanoflann)
+find_package(PCL CONFIG REQUIRED)
 
 # CNPY LIB
 add_library(cnpy
@@ -46,16 +47,16 @@ add_library(lazperf
 )
 
 set(MAIN_SRC 
-  ${PROJECT_SOURCE_DIR}/src/file_io.cpp) 
-  #${PROJECT_SOURCE_DIR}/src/cnpy.cpp
-#  ${PROJECT_SOURCE_DIR}/src/neighborhood.cpp
-#  ${PROJECT_SOURCE_DIR}/src/features.cpp)
+  ${PROJECT_SOURCE_DIR}/src/file_io.cpp
+  ${PROJECT_SOURCE_DIR}/src/neighborhood.cpp
+  ${PROJECT_SOURCE_DIR}/src/features.cpp
+)
 
 set(MAIN_HEADER
   ${PROJECT_SOURCE_DIR}/include/timer.hpp
-  ${PROJECT_SOURCE_DIR}/include/file_io.hpp)
-  #${PROJECT_SOURCE_DIR}/include/features.hpp
-  #${PROJECT_SOURCE_DIR}/include/neighborhood.hpp)
+  ${PROJECT_SOURCE_DIR}/include/file_io.hpp
+  ${PROJECT_SOURCE_DIR}/include/features.hpp
+  ${PROJECT_SOURCE_DIR}/include/neighborhood.hpp)
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
@@ -71,8 +72,8 @@ target_link_libraries(${PROJECT_NAME}
                         PRIVATE Boost::boost Boost::filesystem)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC yaml-cpp::yaml-cpp) 
-#target_link_libraries(${PROJECT_NAME} PUBLIC nanoflann::nanoflann)
-#target_link_libraries(${PROJECT_NAME} PRIVATE ${PCL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC nanoflann::nanoflann)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PCL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC cnpy)
 target_link_libraries(${PROJECT_NAME} PUBLIC lazperf)
 
