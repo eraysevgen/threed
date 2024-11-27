@@ -1,3 +1,7 @@
+lazperf/*
+cnpy/*
+data/*
+
 # Prerequisites
 *.d
 
