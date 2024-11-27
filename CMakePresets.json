@@ -1,0 +1,116 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "displayName": "Custom configure preset",
+            "description": "Sets Ninja generator, build and install directory",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/.out/build/${presetName}",
+            "installDir": "${sourceDir}/.out/install/${presetName}",
+            "cacheVariables": {
+                "CPACK_PACKAGE_DIRECTORY": "${sourceDir}/.out/pack/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CMAKE_POSITION_INDEPENDENT_CODE": true,
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            },
+            "toolset": {
+                "strategy": "external",
+                "value": "host=x64"
+            }
+        },
+        {
+            "name": "debug",
+            "description": "Debug build",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "description": "Release build",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x64",
+            "description": "64bit build (on windows)",
+            "hidden": true,
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "compiler-msvc",
+            "hidden": true,
+            "description": "Use MSVC as the C/C++ compiler",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            }
+        },
+        {
+            "name": "MSVC-x64-DEV",
+            "description": "MSVC x64 debug build in a dev environment",
+            "inherits": [
+                "base",
+                "x64",
+                "debug",
+                "compiler-msvc"
+            ]
+        },
+        {
+            "name": "MSVC-x64-REL",
+            "description": "MSVC x64 release build in a release environment",
+            "inherits": [
+                "base",
+                "x64",
+                "release",
+                "compiler-msvc"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "base",
+            "jobs": 4,
+            "cleanFirst": true,
+            "hidden": true
+        },
+        {
+            "name": "release",
+            "configuration": "Release",
+            "hidden": true,
+            "inherits": [
+                "base"
+            ]
+        },
+        {
+            "name": "debug",
+            "configuration": "Debug",
+            "hidden": true,
+            "inherits": [
+                "base"
+            ]
+        },
+        {
+            "name": "MSVC-x64-DEV",
+            "configurePreset": "MSVC-x64-DEV",
+            "inherits": [
+                "debug"
+            ]
+        },
+        {
+            "name": "MSVC-x64-REL",
+            "configurePreset": "MSVC-x64-REL",
+            "inherits": [
+                "release"
+            ]
+        }
+    ]
+}
