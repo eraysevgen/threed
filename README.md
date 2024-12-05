@@ -5,9 +5,9 @@ A feature extraction program for 3D point clouds
 Prepare or modify config.yaml file.
 ```yaml
 files:
-	host_file: [host_file.las]
-	query_file: [query_file.las]
-	out_file: [output_features.npy]
+ host_file: [host_file.las]
+ query_file: [query_file.las]
+ out_file: [output_features.npy]
 neighborhood:
 	...
 
