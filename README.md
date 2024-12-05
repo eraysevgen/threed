@@ -57,7 +57,7 @@ Compiled and tested on Win10 machine.
 ## Cite
 If you use this repo, please cite our articles:
 
-{% raw %}
+
 @article{Sevgen_Abdikan_2023_a,
   author = {Sevgen, Eray and Abdikan, Saygin},
   title = {Classification of Large-Scale Mobile Laser Scanning Data in Urban Area with LightGBM},
@@ -70,9 +70,7 @@ If you use this repo, please cite our articles:
   issn = {2072-4292},
   doi = {10.3390/rs15153787},
 }
-{% endraw %}
 
-{% raw %}
 @article{Sevgen_Abdikan_2023_b,
   author = {Sevgen, E. and Abdikan, S.},
   title = {POINT-WISE CLASSIFICATION OF HIGH-DENSITY UAV-LIDAR DATA USING GRADIENT BOOSTING MACHINES},
@@ -83,9 +81,10 @@ If you use this repo, please cite our articles:
   url = {https://isprs-archives.copernicus.org/articles/XLVIII-M-1-2023/587/2023/},
   doi = {10.5194/isprs-archives-XLVIII-M-1-2023-587-2023},
 }
-{% endraw %}
+
 
 
 ## License
 See LICENCE file. 
+
 MIT
