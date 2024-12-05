@@ -54,38 +54,37 @@ Compiled and tested on Win10 machine.
 - The features are stored in [out_features].metadata text file.
 - The [out_features].npy can be used directly in python machine learning and deep learning applications.
 
-## Cite
+## Citation
 If you use this repo, please cite our articles:
 
-{% raw %}
-@article{Sevgen_Abdikan_2023_a,
-  author = {Sevgen, Eray and Abdikan, Saygin},
-  title = {Classification of Large-Scale Mobile Laser Scanning Data in Urban Area with LightGBM},
-  journal = {Remote Sensing},
-  volume = {15},
-  year = {2023},
-  number = {15},
-  article-number = {3787},
-  url = {https://www.mdpi.com/2072-4292/15/15/3787},
-  issn = {2072-4292},
-  doi = {10.3390/rs15153787},
-}
-{% endraw %}
 
-{% raw %}
-@article{Sevgen_Abdikan_2023_b,
-  author = {Sevgen, E. and Abdikan, S.},
-  title = {POINT-WISE CLASSIFICATION OF HIGH-DENSITY UAV-LIDAR DATA USING GRADIENT BOOSTING MACHINES},
-  journal = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
-  volume = {XLVIII-M-1-2023},
-  year = {2023},
-  pages = {587--593},
-  url = {https://isprs-archives.copernicus.org/articles/XLVIII-M-1-2023/587/2023/},
-  doi = {10.5194/isprs-archives-XLVIII-M-1-2023-587-2023},
-}
-{% endraw %}
+	@article{Sevgen_Abdikan_2023_a,
+  		author = {Sevgen, Eray and Abdikan, Saygin},
+  		title = {Classification of Large-Scale Mobile Laser Scanning Data in Urban Area with LightGBM},
+  		journal = {Remote Sensing},
+  		volume = {15},
+  		year = {2023},
+  		number = {15},
+  		article-number = {3787},
+  		url = {https://www.mdpi.com/2072-4292/15/15/3787},
+  		issn = {2072-4292},
+  		doi = {10.3390/rs15153787},
+	}
+
+	@article{Sevgen_Abdikan_2023_b,
+  		author = {Sevgen, E. and Abdikan, S.},
+  		title = {POINT-WISE CLASSIFICATION OF HIGH-DENSITY UAV-LIDAR DATA USING GRADIENT BOOSTING MACHINES},
+  		journal = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
+  		volume = {XLVIII-M-1-2023},
+  		year = {2023},
+  		pages = {587--593},
+  		url = {https://isprs-archives.copernicus.org/articles/XLVIII-M-1-2023/587/2023/},
+  		doi = {10.5194/isprs-archives-XLVIII-M-1-2023-587-2023},
+	}
+
 
 
 ## License
 See LICENCE file. 
+
 MIT
