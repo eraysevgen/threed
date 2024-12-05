@@ -24,15 +24,15 @@ Run threed.exe.
   	-d [ --desc ]                      show program description
 ```
 # Dependencies
-- lazperf for reading las files.
-- cnpy for writing npy files.
-- nanoflann for neighborhood.
-- pcl for neighborhood.
-- yaml-cpp for yaml parsing.
-- boost [program_options, filesystem]
-- Eigen 
+- [lazperf](https://github.com/hobuinc/laz-perf)
+- [cnpy](https://github.com/rogersce/cnpy)
+- [nanoflann](https://github.com/jlblancoc/nanoflann)
+- [pcl](https://pointclouds.org/)
+- [yaml-cpp](https://github.com/jbeder/yaml-cpp)
+- [boost](https://www.boost.org/) [program_options, filesystem]
+- [Eigen](https://gitlab.com/libeigen/eigen) 
 
-vcpkg package manager is used for dependency management. 
+[vcpkg](https://vcpkg.io/en/) package manager is used for dependency management. 
 
 ## Compile
 
@@ -57,5 +57,35 @@ Compiled and tested on Win10 machine.
 ## Cite
 If you use this repo, please cite our articles:
 
+{% raw %}
+@article{Sevgen_Abdikan_2023_a,
+  author = {Sevgen, Eray and Abdikan, Saygin},
+  title = {Classification of Large-Scale Mobile Laser Scanning Data in Urban Area with LightGBM},
+  journal = {Remote Sensing},
+  volume = {15},
+  year = {2023},
+  number = {15},
+  article-number = {3787},
+  url = {https://www.mdpi.com/2072-4292/15/15/3787},
+  issn = {2072-4292},
+  doi = {10.3390/rs15153787},
+}
+{% endraw %}
+
+{% raw %}
+@article{Sevgen_Abdikan_2023_b,
+  author = {Sevgen, E. and Abdikan, S.},
+  title = {POINT-WISE CLASSIFICATION OF HIGH-DENSITY UAV-LIDAR DATA USING GRADIENT BOOSTING MACHINES},
+  journal = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
+  volume = {XLVIII-M-1-2023},
+  year = {2023},
+  pages = {587--593},
+  url = {https://isprs-archives.copernicus.org/articles/XLVIII-M-1-2023/587/2023/},
+  doi = {10.5194/isprs-archives-XLVIII-M-1-2023-587-2023},
+}
+{% endraw %}
+
+
 ## License
+See LICENCE file. 
 MIT
