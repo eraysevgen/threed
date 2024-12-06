@@ -20,6 +20,8 @@
 // local calls
 #include "timer.hpp"
 #include "file_io.hpp"
+#include "neighborhood.hpp"
+#include "features.hpp"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +66,101 @@ void show_program_info()
     std::cout  <<"\n" << DESCRIPTION << "\n";
     std::cout<< "build on " << __DATE__ << " at " << __TIME__;
     std::cout <<" by " AUTHOR << "\n";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/*
+* run
+*
+* Parse the arguments and find the corresponding function
+*
+* @param std::string host_file_path      : host file path
+* @param std::string query_file_path     : query file path
+* @param std::string out_file_path       : out file path 
+* @param std::string neighborhood_name   : neighborhood
+* @param std::string neighborhood_engine : device
+* @param double neigborhood_radius       : radius       
+* @param size_t neighborhood_k           : k
+* @param size_t neighborhood_batch_size  : batch_size
+* @param size_t neighborhood_max_k       : max_k
+* @param bool add_height                 : add height features
+* @param bool add_density                : add density information
+* @param bool add_xyz                    : add xyz
+*/
+
+bool run(std::string host_file_path,
+         std::string query_file_path,
+         std::string out_file_path,
+         std::string neighborhood_name,
+         std::string neighborhood_engine,
+         double neigborhood_radius,
+         size_t neighborhood_k,
+         size_t neighborhood_batch_size,
+         size_t neigborhood_max_k,
+         bool add_height,
+         bool add_density,
+         bool add_xyz)
+{
+    std::cout << "Processing ... \n";    
+    auto start_time = std::chrono::steady_clock::now();
+   
+    // fill the point cloud data
+    threed::PointCloud host_point_cloud,query_point_cloud;
+    threed::fill_point_cloud_data(host_file_path,host_point_cloud);
+    threed::fill_point_cloud_data(query_file_path,query_point_cloud);
+
+    std::vector<std::vector<size_t>> query_neighbor_indices;
+
+    // find the neighbors
+    
+    // TODO make a switch here using the enums
+    // TODO we should check the parametrs with asserts
+
+    // select the proper method
+    const bool is_radius = neighborhood_name == "radius" ? true:false; 
+    const bool is_sorted = false;
+
+    if (neighborhood_engine == "cpu" )
+    {
+        
+        compute_indices_by_nanoflann(
+            host_point_cloud,
+            query_point_cloud,
+            query_neighbor_indices,
+            neighborhood_k,
+            neigborhood_radius,
+            is_radius,
+            is_sorted);
+    }
+    else if (neighborhood_engine == "gpu")
+    {
+        compute_indices_by_pcl(
+            host_point_cloud,
+            query_point_cloud,
+            query_neighbor_indices,
+            neighborhood_k,
+            neigborhood_radius,
+            is_radius,
+            is_sorted,
+            neighborhood_batch_size,
+            neigborhood_max_k);
+    }
+    else
+    {
+        throw std::runtime_error(std::string("Neighborhood device not understandable, cpu or gpu supported only"));
+    }
+
+    // compute features
+    std::vector<std::vector<float>> out_features;
+    compute_features(host_point_cloud,query_point_cloud,query_neighbor_indices,out_features);
+    
+    // output features
+    threed::write_features(out_file_path,out_features);
+    
+    //std::cout << "\tTotal number of samples : " << out_features.size() << " - Total features per sample : " << out_features[0].size() << "\n";
+    std::cout << "all done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
+    return true;
+    
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -160,10 +257,11 @@ int main(int argc, char* argv[])
         throw std::runtime_error("No config file");
         return 1;
     }
-    std::string host_file_path,query_file_path,out_file_path,neighborhood_name,neighborhood_device; 
-    float neigborhood_range;
-    size_t neighborhood_k,neighborhood_batch,neighborhood_max_k; 
-    bool add_height,add_intensity,add_density; 
+    std::string host_file_path,query_file_path,out_file_path,neighborhood_name,neighborhood_engine; 
+
+    double neigborhood_radius;
+    size_t neighborhood_k,neighborhood_batch_size,neighborhood_max_k; 
+    bool add_height,add_xyz,add_density; 
 
     try
     {
@@ -178,14 +276,14 @@ int main(int argc, char* argv[])
         out_file_path = files_node["out_file"].as<std::string>();
 
         neighborhood_name = neighborhood_node["name"].as<std::string>();
-        neighborhood_device = neighborhood_node["device"].as<std::string>();
-        neigborhood_range = neighborhood_node["range"].as<double>();
+        neighborhood_engine = neighborhood_node["engine"].as<std::string>();
+        neigborhood_radius = neighborhood_node["radius"].as<double>();
         neighborhood_k = neighborhood_node["k"].as<size_t>();
-        neighborhood_batch = neighborhood_node["batch"].as<size_t>();
+        neighborhood_batch_size = neighborhood_node["batch_size"].as<size_t>();
         neighborhood_max_k = neighborhood_node["max_k"].as<size_t>();
 
         add_height = features_node["height"].as<bool>();
-        add_intensity = features_node["intensity"].as<bool>();
+        add_xyz = features_node["add_xyz"].as<bool>();
         add_density = features_node["density"].as<bool>();
     }
     catch(std::exception& e)
@@ -198,8 +296,7 @@ int main(int argc, char* argv[])
         std::cerr << "Unknown error!" << "\n";
         return 1;
     }
-    //show_info();
-    //std::cout << "Parameters:\n";
+    
     std::cout << "------------------------------------------------------------------------\n";
     std::cout << "config file:\t" << config_file_path << "\n";
     std::cout << "------------------------------------------------------------------------\n";
@@ -207,33 +304,33 @@ int main(int argc, char* argv[])
     std::cout << "\tquery file    :\t" << query_file_path << "\n";
     std::cout << "\tout file      :\t" << out_file_path << "\n";
     std::cout << "\tneighborhood  :\t" << neighborhood_name << "\n";
-    std::cout << "\tdevice        :\t" << neighborhood_device << "\n";
-    std::cout << "\tradius        :\t" << neigborhood_range << "\n";
+    std::cout << "\engine         :\t" << neighborhood_engine << "\n";
+    std::cout << "\tradius        :\t" << neigborhood_radius << "\n";
     std::cout << "\tk             :\t" << neighborhood_k << "\n";
-    std::cout << "\tbatch         :\t" << neighborhood_batch << "\n";
+    std::cout << "\tbatch_size    :\t" << neighborhood_batch_size << "\n";
     std::cout << "\tmax k         :\t" << neighborhood_max_k << "\n";
-    std::cout << "\tadd intensity :\t" << add_intensity << "\n";
     std::cout << "\tadd height    :\t" << add_height << "\n";
     std::cout << "\tadd density   :\t" << add_density << "\n";
+    std::cout << "\tadd xyz       :\t" << add_height << "\n";
     std::cout << "------------------------------------------------------------------------\n";
-    /*
+     
     bool success =  run(
                         host_file_path,
                         query_file_path,
                         out_file_path,
                         neighborhood_name,
-                        neighborhood_device,
-                        neigborhood_range,
+                        neighborhood_engine,
+                        neigborhood_radius,
                         neighborhood_k,
-                        neighborhood_batch,
+                        neighborhood_batch_size,
                         neighborhood_max_k,
-                        add_intensity,
                         add_height,
-                        add_density);
+                        add_density,
+                        add_xyz);
                         
     if (!success)
         return 1;
-    */
+    
     return 0;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
