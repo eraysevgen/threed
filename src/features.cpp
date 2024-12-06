@@ -89,7 +89,24 @@ void threed::compute_geometric_features(
 					      (e3 * std::logf(e3));
 
 	float surface_variation = e3 / (sum_of_eigens);
+    /*
+    In the paper we are using
+    
+    Sum of eigenvalues
+    Linearity
+    planarity
+    sphericity
+    omnivariance
+    eigenentropy
+    surface variation
+    anisotropy
+    absolute moment (6) -> skip those in v2.1.1-beta
+    vertical moment (2) -> skip those in v2.1.1 beta
+    verticality
 
+    As a total of (9 + 6 + 2 = 17) 
+
+    */
     features.push_back(sum_of_eigens);
     features.push_back(linearity);
     features.push_back(planarity);
@@ -98,6 +115,7 @@ void threed::compute_geometric_features(
     features.push_back(anisotropy);
     features.push_back(eigenentropy);
     features.push_back(surface_variation);
+    features.push_back(verticality);
 
 }
 
@@ -115,19 +133,45 @@ void threed::compute_height_features(
     std::vector<float> const & heights,
     std::vector<float>& features
 )
+
 /*
-    Feature sets: 
-        h-min ?
-        TODO
-        max - h ?
-        mean
+In the paper
+
+Height range        zmax - zmin
+height above min    z - zmin
+height below max    zmax - z
+average height      ave(zn)
+variance            var(zn) 
+
+as a total of 5 features
+
+
 */
 {
+    size_t size = heights.size();
     auto min_max = std::minmax_element(heights.begin(),heights.end());
     float sum = std::accumulate(heights.begin(),heights.end(),static_cast<float>(0.0));
     
-    features.push_back(static_cast<float>( h - *min_max.first));
-    features.push_back(static_cast<float>(*min_max.second - h));
-    features.push_back(static_cast<float>(sum / static_cast<float>(heights.size())));
+    float height_range      =   static_cast<float>(*min_max.second - *min_max.first);
+    float height_above_min  =   static_cast<float>( h - *min_max.first);
+    float height_below_max  =   static_cast<float>(*min_max.second - h);
+    float mean              =   sum / static_cast<float>(heights.size());
+    
+    // the var function is from
+    //https://stackoverflow.com/questions/33268513/calculating-standard-deviation-variance-in-c
+    auto variance_func = [&mean, &size](float accumulator, const float& val) 
+    {
+        return accumulator + ((val - mean)*(val - mean) / (size - 1));
+    };
+    float var = std::accumulate(heights.begin(),heights.end(),0.0,variance_func);
 
+    //features.push_back(static_cast<float>( h - *min_max.first));
+    //features.push_back(static_cast<float>(*min_max.second - h));
+    //features.push_back(static_cast<float>(sum / static_cast<float>(heights.size())));
+    features.push_back(height_range);
+    features.push_back(height_above_min);
+    features.push_back(height_below_max);
+    features.push_back(mean);
+    features.push_back(var);
+    
 }

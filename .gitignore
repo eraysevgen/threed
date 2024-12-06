@@ -1,6 +1,6 @@
 data/*
 .data/*
-
+.vscode/settings.json
 # Prerequisites
 *.d
 
