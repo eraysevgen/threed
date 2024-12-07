@@ -1,4 +1,8 @@
 data/*
+.data/*
+.vscode/settings.json
+.results/*
+.benchmark/*
 
 # Prerequisites
 *.d

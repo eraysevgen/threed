@@ -1,0 +1,22 @@
+# define io files
+files:
+  host_file   : "F:/phd/phd_codes/threed_cpp/data/small_data.las"           # host las - where the neighborhood run
+  query_file  : "F:/phd/phd_codes/threed_cpp/data/small_data.las"           # query las - where each point is queries against host
+  out_file    : "F:/phd/phd_codes/threed_cpp/data/small_data_features.npy"  # features npy - each point in the query is a raw in npy file.
+
+# define neighborhood information
+neighborhood:
+  name      : "radius"    # [knn,radius] default radius, use knn otherwise
+  engine    : "cpu"       # [gpu, cpu] gpu is pcl/gpu/octree, cpu is nanoflann
+  radius    : 2.0         # radius range
+  k         : 8           # number of points in knn search
+  batch_size: 1024        # valid in pcl radius search
+  max_k     : 256         # valid in pcl radius search
+
+# define feature set
+features:            # geometry is the default (9) features
+  add_height  : false    # adding 5 height features, default false
+  add_density : false    # adding 1 density features, in radius it is number of points, in knn it is radius , default false
+  add_xyz     : false    # add xyz to at the end of the feature file, default false
+# eigen_mode: sqrt - raw - norm
+# less_neighborhood_point_policy : use_zero - use_alternative - use_nan
