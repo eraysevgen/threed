@@ -21,7 +21,7 @@ include_directories(
     ${CNPY_MAIN}
   )
 
-find_package(Boost REQUIRED COMPONENTS program_options filesystem REQUIRED)
+#find_package(Boost REQUIRED COMPONENTS program_options filesystem REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(nanoflann)
@@ -67,9 +67,9 @@ add_executable(${PROJECT_NAME}
 #target_compile_settings(${PROJECT_NAME})
 target_compile_settings(lazperf)
 
-target_link_libraries(${PROJECT_NAME} 
-                        PRIVATE Boost::boost Boost::program_options
-                        PRIVATE Boost::boost Boost::filesystem)
+#target_link_libraries(${PROJECT_NAME} 
+#                        PRIVATE Boost::boost Boost::program_options
+#                        PRIVATE Boost::boost Boost::filesystem)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC yaml-cpp::yaml-cpp) 
 target_link_libraries(${PROJECT_NAME} PUBLIC nanoflann::nanoflann)

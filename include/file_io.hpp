@@ -17,8 +17,9 @@
 #include <vector>
 #include <string>
 #include <string.h>
+#include <filesystem>
 
-#include <boost/filesystem.hpp>
+//#include <boost/filesystem.hpp>
 
 // TODO make everything as struct 
 // it is easy to manage

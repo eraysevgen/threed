@@ -159,7 +159,9 @@ bool threed::is_file_exist(
     const std::string file_path
 )
 {
-    if (boost::filesystem::exists(file_path)) return true;
-    else return false;
+    std::filesystem::path path(file_path);
+    return std::filesystem::exists(path);
+    //if (boost::filesystem::exists(file_path)) return true;
+    //else return false;
 
 }

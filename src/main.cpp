@@ -12,9 +12,10 @@
 #include <algorithm>
 #include <iterator>
 #include<fstream>
+#include <filesystem>
 
 // vcpkg calls
-#include <boost/program_options.hpp>
+//#include <boost/program_options.hpp>
 #include <yaml-cpp/yaml.h>
 
 // local calls
@@ -183,53 +184,21 @@ bool process_command_line(int argc, char** argv,
                           std::string& config_file_path)
 {
     std::string message = "Allowed option:\n \
-    --help,-h\t\t produce help message \n \
-    --config,-c\t\t config file, default = ./config.yaml \n \
+    --help,   -h\t\t produce help message \n \
+    --config, -c\t\t config file, default = ./config.yaml \n \
     --version,-v\t\t display version info \n \
-    --desc,-d\t\t display program description \n";
+    --desc,   -d\t\t display program description \n";
 
-    //using namespace boost;
-    //namespace po = boost::program_options;
-    //std::cout << "IN command line HERE" << "\n";
     try
     {
-        //po::options_description desc("Allowed option", 1024, 512);
-        //desc.add_options()
-        //  ("help,h",     "produce help message")
-        //  ("config,c", po::value<std::string>(&config_file_path)->default_value("config.yaml"), "set the config file path, default config.yaml")
-        //  ("version,v", "show version info")
-        //  ("desc,d",    "show program description")
-        /;
-        // TODO fix this one, if config used then argc is 3 ? 
-        //std::cout << "IN command line HERE" << config_file_path << "No command line \n";
-
-     
-
-        // if argc is larger or equal 3
-        /*
-        if (argc >= 3 )
-        {
-            // check it includes the -c definition
-            if (strncmp(argv[1],"-",1)!=0)
-            {
-                std::cout << "Usage: threed.exe [option]\n\n";
-                std::cout << desc << "\n";
-                return false;
-            }
-
-            
-        }
-        */
         if (argc == 1)
         {
-            config_file_path = "config.yaml";
-            std::cout << "argc1 called\n";
+            config_file_path = "./config.yaml";
         }
         if (argc == 2)
         {
             if ((strncmp(argv[1],"--help",6)==0)  ||(strncmp(argv[1],"-h",2)==0))
             {
-                //std::cout << "help called\n";
                 std::cout << "Usage: \nthreed.exe [option]\n\n";
                 std::cout << message;
 
@@ -237,7 +206,6 @@ bool process_command_line(int argc, char** argv,
             }
             else if ((strncmp(argv[1],"--version",9)==0) || (strncmp(argv[1],"-v",2)==0))
             {
-                //std::cout << "version called\n";
                 show_version_info();
                 return false;
             }
@@ -249,12 +217,12 @@ bool process_command_line(int argc, char** argv,
             }
             else if ((strncmp(argv[1],"--config",8)==0) || (strncmp(argv[1],"-c",2)==0))
             {
-                std::cout << "no config file provided\n";
+                std::cerr << "Error in arguments: No config file provided\n ";
                 return false;
             }
             else
             {
-                std::cout << "none options\n";
+                std::cerr << "Error in arguments: '"<< argv[1] << "' not understood\n ";
                 return false;
             }
         }
@@ -262,57 +230,20 @@ bool process_command_line(int argc, char** argv,
         {
             if ((strncmp(argv[1],"--config",8)==0) || (strncmp(argv[1],"-c",2)==0))
             {
-                //config_file_path = argv[2];
-                std::cout << "call config\n";
-                //std::filesystem::exists
+                config_file_path = std::string(argv[2]);
             }
             else
             {
-                std::cout << "unable to understand config\n";
+                std::cerr << "Error in arguments: '"<< argv[1] << "' not understood\n ";
                 return false;
             }
-
-            // check the file system
         }
         if (argc>3)
         {
-            std::cout << "larger than 33\n";
+            std::cerr << "Error in arguments: More than 3 arguments passed \n ";
             return false;
         }
 
-        //
-        //if ((argc >2) || (strncmp(argv[1],"-",1)!=0))
-        //{
-        //    std::cout << "Usage: threed.exe [option]\n\n";
-        //    std::cout << desc << "\n";
-        //    return false;
-        //}
-        
-        //po::variables_map vm;
-        //po::store(po::parse_command_line(argc, argv, desc), vm);
-        
-        /*if (vm.count("help"))
-        {
-            std::cout << "Usage: threed.exe [option]\n\n";
-            std::cout << desc << "\n";
-            return false;
-        }
-        if (vm.count("version"))
-        {
-            show_version_info();
-            return false;
-        }
-
-        if (vm.count("desc"))
-        {
-            show_program_info();
-            return false;
-        }
-        */
-        // There must be an easy way to handle the relationship between the
-        // option "help" and "host"-"port"-"config"
-        // Yes, the magic is putting the po::notify after "help" option check
-        //po::notify(vm);
     }
     catch(std::exception& e)
     {
@@ -324,7 +255,14 @@ bool process_command_line(int argc, char** argv,
         std::cerr << "Unknown error!" << "\n";
         return false;
     }
-    std::cout << "returning true HERE" << "\n";
+    const std::filesystem::path path(config_file_path);
+    
+    if (!std::filesystem::exists(path))
+    {
+        std::cerr << "Error in the config file path: " << config_file_path << " does not exist\n";
+        return false;
+    }
+    else
     return true;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -340,23 +278,16 @@ int main(int argc, char* argv[])
     std::string config_file_path;
 
     bool result = process_command_line(argc, argv, config_file_path);
-    result = false;
+
     if (!result)
         return 1;
     
-    if (!threed::is_file_exist(config_file_path))
-    {
-        throw std::runtime_error("No config file");
-        return 1;
-    }
     std::string host_file_path,query_file_path,out_file_path,neighborhood_name,neighborhood_engine; 
 
     double neigborhood_radius;
     size_t neighborhood_k,neighborhood_batch_size,neighborhood_max_k; 
     bool add_height,add_xyz,add_density; 
     
-    std::cout << "HERE" << "\n";
-
     try
     {
         YAML::Node config = YAML::LoadFile(config_file_path);
@@ -376,9 +307,9 @@ int main(int argc, char* argv[])
         neighborhood_batch_size = neighborhood_node["batch_size"].as<size_t>();
         neighborhood_max_k = neighborhood_node["max_k"].as<size_t>();
 
-        add_height = features_node["height"].as<bool>();
+        add_height = features_node["add_height"].as<bool>();
         add_xyz = features_node["add_xyz"].as<bool>();
-        add_density = features_node["density"].as<bool>();
+        add_density = features_node["add_density"].as<bool>();
     }
     catch(std::exception& e)
     {
@@ -390,7 +321,7 @@ int main(int argc, char* argv[])
         std::cerr << "Unknown error!" << "\n";
         return 1;
     }
-    
+    std::cout << std::boolalpha;
     std::cout << "------------------------------------------------------------------------\n";
     std::cout << "config file:\t" << config_file_path << "\n";
     std::cout << "------------------------------------------------------------------------\n";
@@ -398,7 +329,7 @@ int main(int argc, char* argv[])
     std::cout << "\tquery file    :\t" << query_file_path << "\n";
     std::cout << "\tout file      :\t" << out_file_path << "\n";
     std::cout << "\tneighborhood  :\t" << neighborhood_name << "\n";
-    std::cout << "\tengine         :\t" << neighborhood_engine << "\n";
+    std::cout << "\tengine        :\t" << neighborhood_engine << "\n";
     std::cout << "\tradius        :\t" << neigborhood_radius << "\n";
     std::cout << "\tk             :\t" << neighborhood_k << "\n";
     std::cout << "\tbatch_size    :\t" << neighborhood_batch_size << "\n";
@@ -407,7 +338,7 @@ int main(int argc, char* argv[])
     std::cout << "\tadd density   :\t" << add_density << "\n";
     std::cout << "\tadd xyz       :\t" << add_height << "\n";
     std::cout << "------------------------------------------------------------------------\n";
-     
+    return 1;
     bool success =  run(
                         host_file_path,
                         query_file_path,
