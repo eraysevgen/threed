@@ -29,7 +29,6 @@ Run threed.exe.
 - [nanoflann](https://github.com/jlblancoc/nanoflann)
 - [pcl](https://pointclouds.org/)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-- [boost](https://www.boost.org/) [program_options, filesystem]
 - [Eigen](https://gitlab.com/libeigen/eigen) 
 
 [vcpkg](https://vcpkg.io/en/) package manager is used for dependency management. 

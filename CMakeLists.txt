@@ -21,6 +21,7 @@ include_directories(
     ${CNPY_MAIN}
   )
 
+
 #find_package(Boost REQUIRED COMPONENTS program_options filesystem REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -63,6 +64,8 @@ add_executable(${PROJECT_NAME}
   ${MAIN_SRC}
   ${MAIN_HEADER}
   )
+
+  
 
 #target_compile_settings(${PROJECT_NAME})
 target_compile_settings(lazperf)
