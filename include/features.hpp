@@ -11,21 +11,10 @@
 
 #include "timer.hpp"
 
-// pcl search
 #include <pcl/common/pca.h>
-#include <pcl/gpu/containers/device_array.h>
-#include <pcl/gpu/containers/device_memory.h>
-#include <pcl/gpu/octree/octree.hpp>
-#include <pcl/memory.h>
-#include <pcl/octree/octree_search.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-// TODO
-// we dont have boost accumulator in 1.82 - so it is required install 1.82 but latest is 1.85
-// skip right now TODO later
-
-// #include <boost/accumulators/statistics/variance.hpp>
 #include "file_io.hpp"
 
 namespace threed {

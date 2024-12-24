@@ -1,11 +1,21 @@
-/*/////////////////////////////////////////////////////////////////////////////////////////
- * File        : main.cpp
- * Descripion  : Main file, entry point
- * Author      : Eray Sevgen
- * Date        : 2024 October
+/**
+ * @file main.cpp
+ * @brief The main file for threed.exe
+ * @details
+ * This file is a part of threed - a feature extraction program for 3d point clouds.
+ * The las/laz files read, then local features are computed according to the selected neighborhood
+ * method and parameters.
+ *
+ * Without other open source projects, this program would not be possible, see the dependencies.
+ *
+ * Even though this program is  heaviliy tested, it still may produce errorneous results,so please
+ * use your own risks. See the license for further information.
+ *
+ * @author Eray Sevgen
+ * @date 2024 October
+ * @copyright Eray Sevgen (c) 2024
+ *
  */
-/////////////////////////////////////////////////////////////////////////////////////////
-// std calls
 #include <algorithm>
 #include <exception>
 #include <filesystem>
@@ -14,54 +24,50 @@
 #include <iterator>
 #include <string>
 
-// vcpkg calls
-// #include <boost/program_options.hpp>
 #include <yaml-cpp/yaml.h>
 
-// local calls
 #include "features.hpp"
 #include "file_io.hpp"
 #include "neighborhood.hpp"
 #include "timer.hpp"
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/*
- * Program definitions
+/**
+ * @brief Definitions
+ *
  */
-/////////////////////////////////////////////////////////////////////////////////////////
 #define MAJOR_VERSION 2
 #define MINOR_VERSION 1
-#define PATCH_VERSION 1
-#define RELEASE_CANDIDATE ""
+#define PATCH_VERSION 2
+#define BUILD_VERSION "alpha"
 #define AUTHOR "Eray Sevgen"
 #define DESCRIPTION "A program for feature extraction from 3D point cloud data"
 #define SHORT_NAME "threed.exe"
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Get the version info object
+ *
+ * @return std::string
+ */
 std::string get_version_info()
 {
 	std::string main_version_info = "v" + std::to_string(MAJOR_VERSION) + "." + std::to_string(MINOR_VERSION) + "."
 		+ std::to_string(PATCH_VERSION);
-	if (RELEASE_CANDIDATE != "")
-		return main_version_info + "-" + RELEASE_CANDIDATE;
+	if (BUILD_VERSION != "")
+		return main_version_info + "-" + BUILD_VERSION;
 	else
 		return main_version_info;
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-/* show_version_info
- * Show version information on the command line
+
+/**
+ * @brief Display version information
+ *
  */
-/////////////////////////////////////////////////////////////////////////////////////////
-void show_version_info()
-{
-	std::cout << SHORT_NAME << " " << get_version_info(); //<< " build on " << __DATE__ << " at " << __TIME__ << "\n";
-}
-/////////////////////////////////////////////////////////////////////////////////////////
-/* show_program_info
- * Show program information
+void show_version_info() { std::cout << SHORT_NAME << " " << get_version_info(); }
+
+/**
+ * @brief Display program information
+ *
  */
-/////////////////////////////////////////////////////////////////////////////////////////
 void show_program_info()
 {
 	show_version_info();
@@ -70,6 +76,13 @@ void show_program_info()
 	std::cout << " by " AUTHOR << "\n";
 }
 
+/**
+ * @brief A helper function to check a file exists in the directory.
+ *
+ * @param file_path the file path
+ * @return true if exists
+ * @return false not exists
+ */
 bool is_file_exist(std::string file_path)
 {
 	const std::filesystem::path path(file_path);
@@ -81,26 +94,25 @@ bool is_file_exist(std::string file_path)
 		return true;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/*
- * run
+/**
+ * @brief Get the parameters, find the proper method, run the main process
  *
- * Parse the arguments and find the corresponding function
- *
- * @param std::string host_file_path      : host file path
- * @param std::string query_file_path     : query file path
- * @param std::string out_file_path       : out file path
- * @param std::string neighborhood_name   : neighborhood
- * @param std::string neighborhood_engine : device
- * @param double neigborhood_radius       : radius
- * @param size_t neighborhood_k           : k
- * @param size_t neighborhood_batch_size  : batch_size
- * @param size_t neighborhood_max_k       : max_k
- * @param bool add_height                 : add height features
- * @param bool add_density                : add density information
- * @param bool add_xyz                    : add xyz
+ * @param host_file_path host file path, where the spatial index created on
+ * @param query_file_path query file path, a feature for each point in this cloud is computed based on the host file
+ * @param out_file_path out npy file path
+ * @param neighborhood_name neighborhood type name, radius or knn
+ * @param neighborhood_engine neigborhood library, nanoflann or pcl
+ * @param neighborhood_k number of neighbors in knn search
+ * @param neigborhood_radius radius distance in radius search
+ * @param neigborhood_max_k maximum number of neighbors in radius search; based on value both cpu or gpu is allocated
+ * @param neighborhood_batch_size batch size
+ * @param add_height add height features which is computed from the neighborhood points
+ * @param add_density add number of neighbor information to the end of the feature set
+ * @param add_xyz add xyz information to the end of the feature set
+ * @param num_threads number of threads for parallel processing
+ * @return true once the process in success
+ * @return false once someshow in fail
  */
-
 bool run(std::string  host_file_path,
 		 std::string  query_file_path,
 		 std::string  out_file_path,
@@ -136,19 +148,14 @@ bool run(std::string  host_file_path,
 	std::cout << "Processing ... \n";
 	auto start_time = std::chrono::steady_clock::now();
 
-	// fill the point cloud data
 	threed::PointCloud host_point_cloud, query_point_cloud;
 	threed::fill_point_cloud_data(host_file_path, host_point_cloud);
 	threed::fill_point_cloud_data(query_file_path, query_point_cloud);
 
 	std::vector<std::vector<size_t>> query_neighbor_indices;
-	// query_neighbor_indices.resize(query_point_cloud.data.size());
-
-	// find the neighbors
 
 	// TODO make a switch here using the enums
 
-	// select the proper method
 	const bool is_radius = neighborhood_name == "radius" ? true : false;
 	const bool is_sorted = false;
 
@@ -166,43 +173,31 @@ bool run(std::string  host_file_path,
 	}
 	auto clear_vector = [](auto& vec) { vec.clear(); };
 
-	// compute features
 	std::vector<std::vector<float>> out_features;
 	threed::compute_features(host_point_cloud, query_point_cloud, query_neighbor_indices, out_features, add_height,
 							 add_density, add_xyz, num_threads);
-	// clear query neighbor indices
+
 	for (auto& vec : query_neighbor_indices) {
 		clear_vector(vec);
 	}
 
-	// output features
 	threed::write_features(out_file_path, out_features);
-
-	// std::cout << "\t# samples : " << out_features.size() << " - # features per sample : " << out_features[0].size()
-	//		  << "\n";
 	std::cout << " all done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
 
-	// host_point_cloud.release();
-
-	// std::cout << "host released \n ";
-	// query_point_cloud.release();
-
-	// std::cout << "query released \n ";
 	return true;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/* process_command_line
+/**
+ * @brief Parse the command line arguments and obtain the yaml config file path
+ * Display help, version and program description.
  *
- * Parse the yaml config file path
+ * @param argc argument counts
+ * @param argv argument values
+ * @param config_file_path configuration file path
+ * @return true when the command line arguments are properly read and understood
+ * @return false parsing failed
  *
- * @param argc     argument counts
- * @param argv     argument values
- *
- * See the webpage:
- * https://stackoverflow.com/questions/5395503/required-and-optional-arguments-using-boost-library-program-options/5519200#5519200
  */
-/////////////////////////////////////////////////////////////////////////////////////////
 bool process_command_line(int argc, char** argv, std::string& config_file_path)
 {
 	std::string message = "Allowed option:\n \
@@ -225,7 +220,7 @@ bool process_command_line(int argc, char** argv, std::string& config_file_path)
 				show_version_info();
 				return false;
 			} else if ((strncmp(argv[1], "--desc", 6) == 0) || (strncmp(argv[1], "-d", 2) == 0)) {
-				// std::cout << "desc called\n";
+
 				show_program_info();
 				return false;
 			} else if ((strncmp(argv[1], "--config", 8) == 0) || (strncmp(argv[1], "-c", 2) == 0)) {
@@ -259,14 +254,14 @@ bool process_command_line(int argc, char** argv, std::string& config_file_path)
 
 	return is_file_exist(config_file_path);
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-/* main
- * Entry point
+
+/**
+ * @brief The entry point, main function
  *
- * @param argc     argument counts
- * @param argv     argument values
+ * @param argc argument counts
+ * @param argv argument values
+ * @return int 1 in fail, otherwise 0 in success
  */
-/////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[])
 {
 	std::string config_file_path;
@@ -358,11 +353,9 @@ int main(int argc, char* argv[])
 		std::cerr << "Unknown error!" << "\n";
 		return 1;
 	}
-	// after process done write info to
+
 	std::string	  metadata_yaml_file_path = out_file_path.substr(0, out_file_path.size() - 4) + ".metadata";
 	std::ofstream fout(metadata_yaml_file_path);
 	fout << config;
-
-	/////////////////////////////////////////////////////////////////////////////////////////
-	// end of file
+	fout << "\n created by" << get_version_info() << " build on " << __DATE__ << " at " << __TIME__ << "\n";
 }

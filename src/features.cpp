@@ -4,6 +4,18 @@
 #include <mutex>
 #include <thread>
 
+/**
+ * @brief
+ *
+ * @param host_point_cloud host point cloud, where the local features are computed on
+ * @param query_point_cloud query point cloud, in each point there is a row of feature set
+ * @param neighborhood_indices neighborhood indices used in having local neighborhoods
+ * @param features out feature vector
+ * @param add_height add the height features
+ * @param add_density  add the density to the end of the feature set
+ * @param add_xyz add xyz to the end of the feature set
+ * @param num_threads number of threads in parallel processing
+ */
 void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 							  const threed::PointCloud&				  query_point_cloud,
 							  const std::vector<std::vector<size_t>>& neighborhood_indices,
@@ -30,7 +42,6 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 			return;
 		}
 
-		// Construct neighborhood point cloud
 		pcl::PointCloud<pcl::PointXYZ>::Ptr neighbors(new pcl::PointCloud<pcl::PointXYZ>);
 		neighbors->width  = num_neighbors;
 		neighbors->height = 1;
@@ -51,7 +62,6 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 		Eigen::Vector3f eigenvalues	 = pca.getEigenValues();
 		Eigen::Matrix3f eigenvectors = pca.getEigenVectors();
 
-		// Compute geometric features
 		threed::compute_geometric_features(eigenvalues, eigenvectors, features[idx], "sqrt");
 
 		if (add_height) {
@@ -101,7 +111,29 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 			  << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000.0
 			  << " secs.\n";
 }
+/**
+ * @brief Compute geometric features
+ *
+ * @param val eigenvalues
+ * @param vec eigenvectors
+ * @param features out features
+ * @param mode not implemented
+ * @details
+ * In the paper we are using
+ * Sum of eigenvalues
+ * Linearity
+ * planarity
+ * sphericity
+ * omnivariance
+ * eigenentropy
+ * surface variation
+ * anisotropy
+ * absolute moment (6) -> skip those in current version
+ * vertical moment (2) -> skip those in curent version
+ * verticality
+ * As a total of (9 + 6 + 2 = 17)
 
+ */
 void threed::compute_geometric_features(const Eigen::Vector3f& val,
 										const Eigen::Matrix3f& vec,
 										std::vector<float>&	   features,
@@ -129,24 +161,7 @@ void threed::compute_geometric_features(const Eigen::Vector3f& val,
 	float eigenentropy = -(e1 * std::logf(e1)) + (e2 * std::logf(e2)) + (e3 * std::logf(e3));
 
 	float surface_variation = e3 / (sum_of_eigens);
-	/*
-	In the paper we are using
 
-	Sum of eigenvalues
-	Linearity
-	planarity
-	sphericity
-	omnivariance
-	eigenentropy
-	surface variation
-	anisotropy
-	absolute moment (6) -> skip those in v2.1.1-beta
-	vertical moment (2) -> skip those in v2.1.1 beta
-	verticality
-
-	As a total of (9 + 6 + 2 = 17)
-
-	*/
 	features.push_back(sum_of_eigens);
 	features.push_back(linearity);
 	features.push_back(planarity);
@@ -158,27 +173,36 @@ void threed::compute_geometric_features(const Eigen::Vector3f& val,
 	features.push_back(verticality);
 }
 
+/**
+ * @brief Make the all vector zero
+ * @param vec vector
+ * @param n size of vector
+ */
 void threed::make_the_vector_zeros(std::vector<float>& vec, const size_t n)
 {
+	// TODO make this function more efficient
 	for (size_t i = 0; i < n; ++i)
 		vec.push_back(0.0);
 }
 
+/**
+ * @brief Compute the height features
+ *
+ * @param h interested height value
+ * @param heights neighborhodo heigts
+ * @param features out features
+ * @details
+ * In the paper
+ * Height range        zmax - zmin
+ * height above min    z - zmin
+ * height below max    zmax - z
+ * average height      ave(zn)
+ * variance            var(zn)
+ * as a total of 5 features
+ */
+
 void threed::compute_height_features(const float h, std::vector<float> const& heights, std::vector<float>& features)
 
-/*
-In the paper
-
-Height range        zmax - zmin
-height above min    z - zmin
-height below max    zmax - z
-average height      ave(zn)
-variance            var(zn)
-
-as a total of 5 features
-
-
-*/
 {
 	size_t size	   = heights.size();
 	auto   min_max = std::minmax_element(heights.begin(), heights.end());
@@ -191,14 +215,12 @@ as a total of 5 features
 
 	// the var function is from
 	// https://stackoverflow.com/questions/33268513/calculating-standard-deviation-variance-in-c
+
 	auto variance_func = [&mean, &size](float accumulator, const float& val) {
 		return accumulator + ((val - mean) * (val - mean) / (size - 1));
 	};
 	float var = std::accumulate(heights.begin(), heights.end(), 0.0, variance_func);
 
-	// features.push_back(static_cast<float>( h - *min_max.first));
-	// features.push_back(static_cast<float>(*min_max.second - h));
-	// features.push_back(static_cast<float>(sum / static_cast<float>(heights.size())));
 	features.push_back(height_range);
 	features.push_back(height_above_min);
 	features.push_back(height_below_max);

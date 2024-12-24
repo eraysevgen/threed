@@ -2,12 +2,14 @@
 #include <atomic>
 #include <mutex>
 
-// nanofloann adaptor for our data structure
-// using PointCloud = std::vector<std::array<double, 3>>;
 // TODO Make this file seperate for adaptors
 // TODO Make an adaptor for PCL POintXYZ
 // TODO make this adaptor for PointCloud structure
 
+/**
+ * @brief nanofloann adaptor for thred::PointCloud
+ *
+ */
 struct NFlannPointCloudAdaptor {
 	const threed::PointCloud& point_cloud;
 
@@ -48,6 +50,20 @@ struct NFlannPointCloudAdaptor {
 using KDTreeAdaptor = nanoflann::
 	KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, NFlannPointCloudAdaptor>, NFlannPointCloudAdaptor, 3>;
 
+/**
+ * @brief Compute the neighborhood indices by nanoflann library -supports both knn and radius.
+ *
+ * @param host_point_cloud host point cloud, where the spatial kdtree is build on
+ * @param query_point_cloud query point cloud, where each point is queries against host point cloud
+ * @param indices each row consists of several neighborhood indices
+ * @param k number of neighbors in knn
+ * @param radius radius distance
+ * @param is_radius determine whether it is radius or knn
+ * @param is_sorted determine the indices are sorted or not
+ * @param max_k maximum number of neigbors for allocation
+ * @param batch_size batch size, not used in this function
+ * @param num_threads number of threads in parallel processing
+ */
 void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point_cloud,
 										  const threed::PointCloud&			query_point_cloud,
 										  std::vector<std::vector<size_t>>& indices,
@@ -67,7 +83,6 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 		throw std::runtime_error("Point cloud data cannot be empty.");
 	}
 
-	// set the number of threads
 	unsigned int max_num_threads = std::thread::hardware_concurrency();
 	num_threads					 = std::min(std::max(1U, num_threads), max_num_threads);
 
@@ -80,7 +95,6 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 		3, adaptor,
 		nanoflann::KDTreeSingleIndexAdaptorParams(10, nanoflann::KDTreeSingleIndexAdaptorFlags::None, num_threads));
 
-	// Build the index
 	kd_tree.buildIndex();
 
 	std::cout << " done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
@@ -88,10 +102,6 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 	std::cout << "-> Computing indices  ... ";
 	start_time = std::chrono::steady_clock::now();
 
-	// resize the indices, so it will be what we need in size
-	// indices.resize(query_point_cloud.data.size());
-
-	// kdtree general params
 	double						radius2 = radius * radius;
 	nanoflann::SearchParameters params(0.0, is_sorted);
 
@@ -113,7 +123,7 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 
 			if (((idx % 10000) == 0) || (idx - 1 == num_points)) {
 				completed_percentage = (static_cast<double>(idx) / static_cast<double>(num_points)) * 100.0f;
-				// std::cout << "points read :" << points_read << "\n";
+
 				std::cout << "\r-> Computing indices  ... %" << std::setprecision(0) << std::fixed
 						  << completed_percentage;
 			}
@@ -155,7 +165,21 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 
 	std::cout << " done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
 }
-
+/**
+ * @brief Compute the neighborhood indices by pcl library -supports only radius on gpu.
+ * The parameters are identical to nanoflann version.
+ *
+ * @param host_point_cloud host point cloud, where the spatial kdtree is build on
+ * @param query_point_cloud query point cloud, where each point is queries against host point cloud
+ * @param indices each row consists of several neighborhood indices
+ * @param k number of neighbors in knn
+ * @param radius radius distance
+ * @param is_radius determine whether it is radius or knn
+ * @param is_sorted determine the indices are sorted or not
+ * @param max_k maximum number of neigbors for allocation
+ * @param batch_size batch size
+ * @param num_threads number of threads in parallel processing
+ */
 void threed::compute_indices_by_pcl(threed::PointCloud&				  host_point_cloud,
 									threed::PointCloud&				  query_point_cloud,
 									std::vector<std::vector<size_t>>& indices,
@@ -167,14 +191,7 @@ void threed::compute_indices_by_pcl(threed::PointCloud&				  host_point_cloud,
 									const size_t					  batch_size,
 									unsigned int					  num_threads)
 {
-	// create points clouds
-	// host -> pcl point cloud
 	pcl::PointCloud<pcl::PointXYZ> pcl_host_point_cloud;
-
-	// query -> vector of pcl point
-	// std::vector<pcl::PointXYZ> pcl_query_point_cloud;
-
-	// fill host data
 	pcl_host_point_cloud.width	  = host_point_cloud.data.size();
 	pcl_host_point_cloud.height	  = 1;
 	pcl_host_point_cloud.is_dense = false;
@@ -210,25 +227,20 @@ void threed::compute_indices_by_pcl(threed::PointCloud&				  host_point_cloud,
 		pcl::gpu::Octree::Queries  octree_gpu_quaries;
 		std::vector<pcl::PointXYZ> pcl_query_point_cloud;
 		pcl_query_point_cloud.reserve(batch_size);
-		// size_t buffer_points = 100000;
+
 		size_t points_read		   = 0;
 		size_t num_points_in_query = query_point_cloud.data.size();
 		double completed_percentage;
 		while (points_read < num_points_in_query) {
-			// Determine how many points to read in this iteration
+
 			size_t points_to_read = std::min(batch_size, num_points_in_query - points_read);
 
 			completed_percentage
 				= (static_cast<double>(points_read) / static_cast<double>(num_points_in_query)) * 100.0f;
-			// std::cout << "points read :" << points_read << "\n";
+
 			std::cout << "\r-> Computing indices  ... %" << std::setprecision(0) << std::fixed << completed_percentage;
 
 			for (size_t i = points_read; i < points_read + points_to_read; ++i) {
-				// pcl::PointXYZ p;
-				// p.x = static_cast<float>(query_point_cloud.data[i][0]);
-				// p.y = static_cast<float>(query_point_cloud.data[i][1]);
-				// p.z = static_cast<float>(query_point_cloud.data[i][2]);
-				// pcl_query_point_cloud.emplace_back(p);
 				pcl_query_point_cloud.emplace_back(pcl::PointXYZ({ static_cast<float>(query_point_cloud.data[i][0]),
 																   static_cast<float>(query_point_cloud.data[i][1]),
 																   static_cast<float>(query_point_cloud.data[i][2]) })
@@ -237,8 +249,6 @@ void threed::compute_indices_by_pcl(threed::PointCloud&				  host_point_cloud,
 			}
 
 			octree_gpu_quaries.upload(pcl_query_point_cloud);
-
-			// const int max_answers = 32;
 
 			pcl::gpu::NeighborIndices result_gpu(octree_gpu_quaries.size(), max_k);
 
@@ -262,6 +272,16 @@ void threed::compute_indices_by_pcl(threed::PointCloud&				  host_point_cloud,
 	std::cout << " done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
 }
 
+/**
+ * @brief Copy gpu indices to cpu
+ *
+ * @param sizes number of neighbors
+ * @param data the flattened indices on the gpu
+ * @param indices cpu indices
+ * @param points_read points read up to now
+ * @param max_k maximum number of points in radius search
+ * @param num_threads number of threads in parallel processing
+ */
 void threed::parallel_add_indices(const std::vector<int>&			sizes,
 								  const std::vector<int>&			data,
 								  std::vector<std::vector<size_t>>& indices,

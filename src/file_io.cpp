@@ -1,5 +1,10 @@
 #include "file_io.hpp"
 
+/**
+ * @brief Read the point cloud file
+ * @param file_path las/laz file path
+ * @param point_cloud threed::PointCloud reference
+ */
 void threed::fill_point_cloud_data(const std::string file_path, threed::PointCloud& point_cloud)
 {
 	std::string file_ext = file_path.substr(file_path.size() - 4, file_path.size());
@@ -13,9 +18,16 @@ void threed::fill_point_cloud_data(const std::string file_path, threed::PointClo
 		throw std::runtime_error(std::string("Unknown file extension"));
 	}
 }
-
+/**
+ * @brief Read las file
+ *
+ * @param las_file_path las/laz file path
+ * @param point_cloud threed::PointCloud reference
+ */
 void threed::read_las_file(const std::string las_file_path, threed::PointCloud& point_cloud)
 {
+	// TODO merge this function with the previous one ?
+
 	if (!threed::is_file_exist(las_file_path))
 		throw std::runtime_error("File not found");
 
@@ -71,46 +83,16 @@ void threed::read_las_file(const std::string las_file_path, threed::PointCloud& 
 
 		points_read += points_to_read;
 	}
-	/* This is the first version, it is slower than the buffer version above
 
-	for (size_t i = 0; i < num_points; i++)
-	{
-		try
-		{
-			 // Read point into buffer
-			f.readPoint(buffer.data());
-
-			Access XYZ coordinates
-
-			XYZ coordinates are in the first 12 bytes in both 10 and 14 versions
-
-
-			int32_t x_raw = *reinterpret_cast<int32_t*>(&buffer[0]);
-			int32_t y_raw = *reinterpret_cast<int32_t*>(&buffer[4]);
-			int32_t z_raw = *reinterpret_cast<int32_t*>(&buffer[8]);
-
-			// Apply scaling and offset if needed (use f->header() for scaling factors)
-			double x = x_raw * scales.x; // + offsets.x;
-			double y = y_raw * scales.y; //+ offsets.y;
-			double z = z_raw * scales.z; //+ offsets.z;
-
-			 Then the intensity stored in the next bytes
-			//uint16_t intensity = *reinterpret_cast<uint16_t*>(&buffer[12]);
-
-			//std::cout << "Point " << i << ": (" << x << ", " << y << ", " << z << ")\n";
-			point_cloud.push_back({static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << "Exception reading point " << i << ": " << e.what() << std::endl;
-			break;
-		}
-	}*/
-	// std::cout << " \n \t num_points=" << num_points <<" succesfully read in " << since(start_reading).count()/1000.0
-	// << "seconds\n";
 	std::cout << " done in " << since(start_reading).count() / 1000.0 << "secs. (num_points=" << num_points << ")\n";
 }
 
+/**
+ * @brief Write the features to numpy file format
+ *
+ * @param out_file_name out npy file path
+ * @param out_features features in std::vector<std::vector<float>>
+ */
 void threed::write_features(std::string out_file_name, const std::vector<std::vector<float>>& out_features)
 {
 	std::cout << "-> Writing the file ..." << out_file_name.substr(out_file_name.size() - 15, out_file_name.size())
@@ -139,11 +121,17 @@ void threed::write_features(std::string out_file_name, const std::vector<std::ve
 	std::cout << " done in " << since(start_writing).count() / 1000.0 << "secs. (num_points=" << out_features.size()
 			  << ") (num_features=" << col << ")\n";
 }
-
+/**
+ * @brief Check the file exist
+ *
+ * @param file_path file path
+ * @return true if exists
+ * @return false not exist
+ */
 bool threed::is_file_exist(const std::string file_path)
 {
+	// TODO there is the same function in main, merge those
+
 	std::filesystem::path path(file_path);
 	return std::filesystem::exists(path);
-	// if (boost::filesystem::exists(file_path)) return true;
-	// else return false;
 }

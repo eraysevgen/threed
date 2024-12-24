@@ -7,20 +7,12 @@
 #include <thread>
 #include <vector>
 
-// nanoflann search
 #include "nanoflann.hpp"
-
-// pcl search
 #include <pcl/common/pca.h>
-// #include <pcl/gpu/containers/device_array.h>
-// #include <pcl/gpu/containers/device_memory.h>
 #include <pcl/gpu/octree/octree.hpp>
-// #include <pcl/memory.h>
-//  #include <pcl/octree/octree_search.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-// time keeping
 #include "file_io.hpp"
 #include "timer.hpp"
 

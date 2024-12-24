@@ -18,7 +18,7 @@ features:            # geometry is the default (9) features
   add_height  : false    # adding 5 height features, default false
   add_density : true    # adding 1 density features, in radius it is number of points, in knn it is radius , default false
   add_xyz     : false    # add xyz to at the end of the feature file, default false
-# eigen_mode: sqrt - raw - norm
-# less_neighborhood_point_policy : use_zero - use_alternative - use_nan
+
+# global params
 params:
   num_threads: 6      # used in every paralel loop
