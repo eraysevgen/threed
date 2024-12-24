@@ -71,7 +71,7 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 	unsigned int max_num_threads = std::thread::hardware_concurrency();
 	num_threads					 = std::min(std::max(1U, num_threads), max_num_threads);
 
-	std::cout << "-> Creating kdtree ... ";
+	std::cout << "-> Creating kdtree   ... ";
 	auto start_time = std::chrono::steady_clock::now();
 
 	NFlannPointCloudAdaptor adaptor(host_point_cloud);
@@ -85,7 +85,7 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 
 	std::cout << " done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
 
-	std::cout << "-> Computing indices ... ";
+	std::cout << "-> Computing indices  ... ";
 	start_time = std::chrono::steady_clock::now();
 
 	// resize the indices, so it will be what we need in size
@@ -98,6 +98,7 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 	std::atomic<size_t> next_index(0);
 	size_t				num_points = query_point_cloud.data.size();
 	indices.resize(num_points);
+	double completed_percentage;
 
 	auto process_query = [&]() {
 		std::vector<size_t>									 ret_index(k);
@@ -106,8 +107,17 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 
 		while (true) {
 			size_t idx = next_index.fetch_add(1);
+
 			if (idx >= num_points)
 				break;
+
+			if (((idx % 10000) == 0) || (idx - 1 == num_points)) {
+				completed_percentage = (static_cast<double>(idx) / static_cast<double>(num_points)) * 100.0f;
+				// std::cout << "points read :" << points_read << "\n";
+				std::cout << "\r-> Computing indices  ... %" << std::setprecision(0) << std::fixed
+						  << completed_percentage;
+			}
+
 			const auto&			query_point = query_point_cloud.data[idx];
 			std::vector<size_t> pts_indices;
 
@@ -193,28 +203,37 @@ void threed::compute_indices_by_pcl(threed::PointCloud&				  host_point_cloud,
 
 	std::cout << " done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
 
-	std::cout << "-> Computing indices ... ";
+	std::cout << "-> Computing indices  ... ";
 	start_time = std::chrono::steady_clock::now();
 
 	if (is_radius) {
 		pcl::gpu::Octree::Queries  octree_gpu_quaries;
 		std::vector<pcl::PointXYZ> pcl_query_point_cloud;
-
+		pcl_query_point_cloud.reserve(batch_size);
 		// size_t buffer_points = 100000;
 		size_t points_read		   = 0;
 		size_t num_points_in_query = query_point_cloud.data.size();
-
+		double completed_percentage;
 		while (points_read < num_points_in_query) {
 			// Determine how many points to read in this iteration
 			size_t points_to_read = std::min(batch_size, num_points_in_query - points_read);
+
+			completed_percentage
+				= (static_cast<double>(points_read) / static_cast<double>(num_points_in_query)) * 100.0f;
 			// std::cout << "points read :" << points_read << "\n";
+			std::cout << "\r-> Computing indices  ... %" << std::setprecision(0) << std::fixed << completed_percentage;
 
 			for (size_t i = points_read; i < points_read + points_to_read; ++i) {
-				pcl::PointXYZ p;
-				p.x = static_cast<float>(query_point_cloud.data[i][0]);
-				p.y = static_cast<float>(query_point_cloud.data[i][1]);
-				p.z = static_cast<float>(query_point_cloud.data[i][2]);
-				pcl_query_point_cloud.push_back(p);
+				// pcl::PointXYZ p;
+				// p.x = static_cast<float>(query_point_cloud.data[i][0]);
+				// p.y = static_cast<float>(query_point_cloud.data[i][1]);
+				// p.z = static_cast<float>(query_point_cloud.data[i][2]);
+				// pcl_query_point_cloud.emplace_back(p);
+				pcl_query_point_cloud.emplace_back(pcl::PointXYZ({ static_cast<float>(query_point_cloud.data[i][0]),
+																   static_cast<float>(query_point_cloud.data[i][1]),
+																   static_cast<float>(query_point_cloud.data[i][2]) })
+
+				);
 			}
 
 			octree_gpu_quaries.upload(pcl_query_point_cloud);
@@ -234,6 +253,8 @@ void threed::compute_indices_by_pcl(threed::PointCloud&				  host_point_cloud,
 			octree_gpu_quaries.release();
 			pcl_query_point_cloud.clear();
 		}
+		completed_percentage = (static_cast<double>(points_read) / static_cast<double>(num_points_in_query)) * 100.0f;
+		std::cout << "\r-> Computing indices  ... %" << std::setprecision(0) << std::fixed << completed_percentage;
 	} else {
 		throw std::runtime_error(std::string("Knn on gpu not supported, use knn on cpu instead"));
 	}

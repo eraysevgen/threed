@@ -24,7 +24,7 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 	auto process_point = [&](size_t idx) {
 		size_t num_neighbors = neighborhood_indices[idx].size();
 
-		if (num_neighbors < 3) {
+		if (num_neighbors <= 4) {
 			threed::make_the_vector_zeros(features[idx], 8); // Geometric features
 			threed::make_the_vector_zeros(features[idx], 3); // Height features
 			return;
@@ -70,14 +70,21 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 			features[idx].push_back(static_cast<float>(query_point[2]));
 		}
 	};
+	double completed_percentage;
+	auto   process_computation = [&]() {
+		  while (true) {
+			  size_t idx = next_index.fetch_add(1);
+			  if (idx >= num_points)
+				  break;
 
-	auto process_computation = [&]() {
-		while (true) {
-			size_t idx = next_index.fetch_add(1);
-			if (idx >= num_points)
-				break;
-			process_point(idx);
-		}
+			  if (((idx % 10000) == 0) || (idx - 1 == num_points)) {
+				  completed_percentage = (static_cast<double>(idx) / static_cast<double>(num_points)) * 100.0f;
+
+				  std::cout << "\r-> Computing features ... %" << std::setprecision(0) << std::fixed
+							<< completed_percentage;
+			  }
+			  process_point(idx);
+		  }
 	};
 
 	std::vector<std::thread> threads;

@@ -1,22 +1,22 @@
 # define io files
 files:
-  host_file   : "F:/git_repos/threed/.data/h3d_train_clipped_3.las"           # host las - where the neighborhood run
-  query_file  : "F:/git_repos/threed/.data/h3d_train_clipped_3.las"           # query las - where each point is queries against host
-  out_file    : "F:/git_repos/threed/.data/h3d_train_clipped_3_features.npy"   # features npy - each point in the query is a raw in npy file.
+  host_file   : "F:/git_repos/threed/.data/h3d/medium.las"           # host las - where the neighborhood run
+  query_file  : "F:/git_repos/threed/.data/h3d/medium.las"           # query las - where each point is queries against host
+  out_file    : "F:/git_repos/threed/.data/h3d/medium_w_pcl_octree_features.npy"   # features npy - each point in the query is a raw in npy file.
 
 # define neighborhood information
 neighborhood:
   name      : "radius"    # [knn,radius] default radius, use knn otherwise
-  engine    : "cpu"       # [gpu, cpu] gpu is pcl/gpu/octree, cpu is nanoflann
-  radius    : 1.0         # radius range
+  engine    : "gpu"       # [gpu, cpu] gpu is pcl/gpu/octree, cpu is nanoflann
+  radius    : 0.25         # radius range
   k         : 8           # number of points in knn search
   batch_size: 65536       # valid in pcl gpu range search
-  max_k     : 4096         # maximum number of returns in range search, valid in radius search
+  max_k     : 512         # maximum number of returns in range search, valid in radius search
 
 # define feature set
 features:            # geometry is the default (9) features
   add_height  : false    # adding 5 height features, default false
-  add_density : false    # adding 1 density features, in radius it is number of points, in knn it is radius , default false
+  add_density : true    # adding 1 density features, in radius it is number of points, in knn it is radius , default false
   add_xyz     : false    # add xyz to at the end of the feature file, default false
 # eigen_mode: sqrt - raw - norm
 # less_neighborhood_point_policy : use_zero - use_alternative - use_nan

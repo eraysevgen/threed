@@ -32,7 +32,7 @@
 #define MAJOR_VERSION 2
 #define MINOR_VERSION 1
 #define PATCH_VERSION 1
-#define RELEASE_CANDIDATE "beta"
+#define RELEASE_CANDIDATE ""
 #define AUTHOR "Eray Sevgen"
 #define DESCRIPTION "A program for feature extraction from 3D point cloud data"
 #define SHORT_NAME "threed.exe"
@@ -70,6 +70,17 @@ void show_program_info()
 	std::cout << " by " AUTHOR << "\n";
 }
 
+bool is_file_exist(std::string file_path)
+{
+	const std::filesystem::path path(file_path);
+
+	if (!std::filesystem::exists(path)) {
+		std::cerr << "Error in file path: " << file_path << " does not exist\n";
+		return false;
+	} else
+		return true;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
  * run
@@ -104,9 +115,26 @@ bool run(std::string  host_file_path,
 		 bool		  add_xyz,
 		 unsigned int num_threads)
 {
+	if (!is_file_exist(host_file_path))
+		return false;
+
+	if (!is_file_exist(query_file_path))
+		return false;
+
+	assert(neighborhood_k > 0 && "k must be greater than zero.");
+	assert(neigborhood_radius > 0 && "Radius must be greater than zero.");
+	assert(neigborhood_max_k > 0 && "Maximum k must be greater than zero.");
+	assert(neighborhood_batch_size > 0 && "Batch size must be greater than zero.");
+	assert(num_threads > 0 && "Num threads must be greater than zero.");
+
+	assert(neighborhood_name == "knn"
+		   || neighborhood_name == "radius" && "Invalid neighborhood: must be 'knn' or 'radius'");
+
+	assert(neighborhood_engine == "cpu"
+		   || neighborhood_engine == "gpu" && "Invalid neighborhood engine: must be 'cpu' or 'gpu'");
+
 	std::cout << "Processing ... \n";
 	auto start_time = std::chrono::steady_clock::now();
-	// TODO add assert for the parameter checks
 
 	// fill the point cloud data
 	threed::PointCloud host_point_cloud, query_point_cloud;
@@ -119,7 +147,6 @@ bool run(std::string  host_file_path,
 	// find the neighbors
 
 	// TODO make a switch here using the enums
-	// TODO we should check the parametrs with asserts
 
 	// select the proper method
 	const bool is_radius = neighborhood_name == "radius" ? true : false;
@@ -136,11 +163,7 @@ bool run(std::string  host_file_path,
 		threed::compute_indices_by_pcl(host_point_cloud, query_point_cloud, query_neighbor_indices, neighborhood_k,
 									   neigborhood_radius, is_radius, is_sorted, neigborhood_max_k,
 									   neighborhood_batch_size, num_threads);
-	} else {
-		throw std::runtime_error(std::string("Neighborhood device not understandable, cpu or gpu supported only"));
 	}
-	// std::cout << "all done in " << static_cast<double>(since(start_time).count()) / 1000.0 << "secs.\n";
-
 	auto clear_vector = [](auto& vec) { vec.clear(); };
 
 	// compute features
@@ -233,13 +256,8 @@ bool process_command_line(int argc, char** argv, std::string& config_file_path)
 		std::cerr << "Unknown error!" << "\n";
 		return false;
 	}
-	const std::filesystem::path path(config_file_path);
 
-	if (!std::filesystem::exists(path)) {
-		std::cerr << "Error in the config file path: " << config_file_path << " does not exist\n";
-		return false;
-	} else
-		return true;
+	return is_file_exist(config_file_path);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 /* main
@@ -264,9 +282,9 @@ int main(int argc, char* argv[])
 	size_t		 neighborhood_k, neighborhood_batch_size, neighborhood_max_k;
 	bool		 add_height, add_xyz, add_density;
 	unsigned int num_threads;
-
+	YAML::Node	 config;
 	try {
-		YAML::Node config = YAML::LoadFile(config_file_path);
+		config = YAML::LoadFile(config_file_path);
 
 		YAML::Node files_node		 = config["files"].as<YAML::Node>();
 		YAML::Node neighborhood_node = config["neighborhood"].as<YAML::Node>();
@@ -324,14 +342,27 @@ int main(int argc, char* argv[])
 	std::cout << "  num threads       : " << num_threads << "\n";
 	std::cout << "------------------------------------------------------------------------\n";
 
-	bool success = run(host_file_path, query_file_path, out_file_path, neighborhood_name, neighborhood_engine,
-					   neighborhood_k, neigborhood_radius, neighborhood_max_k, neighborhood_batch_size, add_height,
-					   add_density, add_xyz, num_threads);
+	try {
+		bool success = run(host_file_path, query_file_path, out_file_path, neighborhood_name, neighborhood_engine,
+						   neighborhood_k, neigborhood_radius, neighborhood_max_k, neighborhood_batch_size, add_height,
+						   add_density, add_xyz, num_threads);
 
-	if (!success)
+		if (!success)
+			return 1;
+	}
+
+	catch (std::exception& e) {
+		std::cerr << "Error in Processing: " << e.what() << "\n";
 		return 1;
+	} catch (...) {
+		std::cerr << "Unknown error!" << "\n";
+		return 1;
+	}
+	// after process done write info to
+	std::string	  metadata_yaml_file_path = out_file_path.substr(0, out_file_path.size() - 4) + ".metadata";
+	std::ofstream fout(metadata_yaml_file_path);
+	fout << config;
 
-	return 0;
+	/////////////////////////////////////////////////////////////////////////////////////////
+	// end of file
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-// end of file
