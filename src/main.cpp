@@ -38,7 +38,7 @@
 #define MAJOR_VERSION 2
 #define MINOR_VERSION 1
 #define PATCH_VERSION 3
-#define BUILD_VERSION " "
+#define BUILD_VERSION ""
 #define AUTHOR "Eray Sevgen"
 #define DESCRIPTION "A program for feature extraction from 3D point cloud data"
 #define SHORT_NAME "threed.exe"
