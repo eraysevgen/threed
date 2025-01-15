@@ -1,5 +1,5 @@
 # threed
-A feature extraction program for 3D point clouds
+A feature extraction program for 3D point clouds. 
 
 ## Usage
 Prepare or modify config.yaml file.
@@ -49,9 +49,11 @@ Compiled and tested on Win10 machine.
 	- Sphericity
 	- .. 
 - Optionally height features can be added with add_height flag in config.yaml
-- Optionally ply output can be set with ply_file item in config.yaml
 - The features are stored in [out_features].metadata text file.
 - The [out_features].npy can be used directly in python machine learning and deep learning applications.
+## Blog Post
+
+TODO: See the blog post(coming soon)
 
 ## Citation
 If you use this repo, please cite our articles:
