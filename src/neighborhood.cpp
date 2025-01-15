@@ -2,53 +2,13 @@
 #include <atomic>
 #include <mutex>
 
-// TODO Make this file seperate for adaptors
 // TODO Make an adaptor for PCL POintXYZ
 // TODO make this adaptor for PointCloud structure
 
-/**
- * @brief nanofloann adaptor for thred::PointCloud
- *
- */
-struct NFlannPointCloudAdaptor {
-	const threed::PointCloud& point_cloud;
-
-	NFlannPointCloudAdaptor(const threed::PointCloud& pts)
-		: point_cloud(pts)
-	{
-	}
-
-	inline size_t kdtree_get_point_count() const { return point_cloud.data.size(); }
-
-	inline double kdtree_get_pt(const size_t idx, const size_t dim) const { return point_cloud.data[idx][dim]; }
-
-	template <class BBOX> bool kdtree_get_bbox(BBOX& bb) const
-	{
-		if (point_cloud.data.empty())
-			bb = {};
-		else {
-			for (size_t j = 0; j < 3; ++j) {
-				double val = point_cloud.data[0][j];
-				bb[j].low  = val;
-				bb[j].high = val;
-			}
-
-			for (size_t i = 1; i < point_cloud.data.size(); ++i) {
-				for (size_t j = 0; j < 3; ++j) {
-					double val = point_cloud.data[i][j];
-					if (val < bb[j].low)
-						bb[j].low = val;
-					if (val > bb[j].high)
-						bb[j].high = val;
-				}
-			}
-		}
-		return true;
-	}
-};
-
-using KDTreeAdaptor = nanoflann::
-	KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, NFlannPointCloudAdaptor>, NFlannPointCloudAdaptor, 3>;
+using KDTreeAdaptor
+	= nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, threed::NFlannPointCloudAdaptor>,
+										  threed::NFlannPointCloudAdaptor,
+										  3>;
 
 /**
  * @brief Compute the neighborhood indices by nanoflann library -supports both knn and radius.
@@ -137,9 +97,9 @@ void threed::compute_indices_by_nanoflann(const threed::PointCloud&			host_point
 
 				pts_indices.reserve(num_matches);
 
-				for (const auto& match : radius_matches)
+				for (const auto& match : radius_matches) {
 					pts_indices.push_back(static_cast<size_t>(match.first));
-
+				}
 			} else {
 				nanoflann::KNNResultSet<double, size_t> resultSet(k);
 

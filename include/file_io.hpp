@@ -32,8 +32,8 @@ struct PointCloud {
 };
 void fill_point_cloud_data(const std::string, PointCloud&);
 void read_las_file(const std::string, PointCloud&);
-void write_features(std::string,						   // out file name
-					const std::vector<std::vector<float>>& // features
+void write_features(std::string,							// out file name
+					const std::vector<std::vector<double>>& // features
 );
 bool is_file_exist(const std::string);
 }

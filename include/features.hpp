@@ -11,33 +11,39 @@
 
 #include "timer.hpp"
 
-#include <pcl/common/pca.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
+// #include <pcl/common/pca.h>
+// #include <pcl/point_cloud.h>
+// #include <pcl/point_types.h>
 
 #include "file_io.hpp"
+
+#define NUM_GEOMETRIC_FEATURES 9
+#define NUM_HEIGHT_FEATURES 5
+#define NUM_XYZ_FEATURES 3
+#define NUM_DENSITY_FEATURES 1
 
 namespace threed {
 
 void compute_features(const threed::PointCloud&,
 					  const threed::PointCloud&,			   // query point cloud
 					  const std::vector<std::vector<size_t>>&, // indices
-					  std::vector<std::vector<float>>&,		   // out features
+					  std::vector<std::vector<double>>&,	   // out features
 					  const bool,
 					  const bool,
 					  const bool,
 					  unsigned int);
 
-void compute_geometric_features(const Eigen::Vector3f&, // eigenvalue
-								const Eigen::Matrix3f&, // eigenvectors
-								std::vector<float>&,	// out features
+void compute_geometric_features(const Eigen::Vector3d&, // eigenvalue
+								const Eigen::Matrix3d&, // eigenvectors
+								std::vector<double>&,	// out features
 								std::string mode		// mode sqrt,raw
 );
-void compute_height_features(const float,				// height
-							 const std::vector<float>&, // neighborhing heights
-							 std::vector<float>&		// out features
+void compute_height_features(const double,								// height
+							 const std::vector<std::array<double, 3>>&, // neighbors
+							 std::vector<double>&						// out features
 );
 
-void make_the_vector_zeros(std::vector<float>&, const size_t);
+void make_the_vector_zeros(std::vector<double>&, const size_t);
+void make_the_vector_nan(std::vector<double>&, const size_t);
 }
 #endif

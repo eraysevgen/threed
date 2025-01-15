@@ -173,7 +173,7 @@ bool run(std::string  host_file_path,
 	}
 	auto clear_vector = [](auto& vec) { vec.clear(); };
 
-	std::vector<std::vector<float>> out_features;
+	std::vector<std::vector<double>> out_features;
 	threed::compute_features(host_point_cloud, query_point_cloud, query_neighbor_indices, out_features, add_height,
 							 add_density, add_xyz, num_threads);
 
@@ -211,19 +211,22 @@ bool process_command_line(int argc, char** argv, std::string& config_file_path)
 			config_file_path = "./config.yaml";
 		}
 		if (argc == 2) {
-			if ((strncmp(argv[1], "--help", 6) == 0) || (strncmp(argv[1], "-h", 2) == 0)) {
+			if ((strncmp(argv[1], "--help", 6) == 0) || ((strncmp(argv[1], "-h", 2) == 0) & (strlen(argv[1]) == 2))) {
 				std::cout << "Usage: \nthreed.exe [option]\n\n";
 				std::cout << message;
 
 				return false;
-			} else if ((strncmp(argv[1], "--version", 9) == 0) || (strncmp(argv[1], "-v", 2) == 0)) {
+			} else if ((strncmp(argv[1], "--version", 9) == 0)
+					   || ((strncmp(argv[1], "-v", 2) == 0) & (strlen(argv[1]) == 2))) {
 				show_version_info();
 				return false;
-			} else if ((strncmp(argv[1], "--desc", 6) == 0) || (strncmp(argv[1], "-d", 2) == 0)) {
-
+			} else if ((strncmp(argv[1], "--desc", 6) == 0)
+					   || ((strncmp(argv[1], "-d", 2) == 0) & (strlen(argv[1]) == 2))) {
 				show_program_info();
 				return false;
-			} else if ((strncmp(argv[1], "--config", 8) == 0) || (strncmp(argv[1], "-c", 2) == 0)) {
+
+			} else if ((strncmp(argv[1], "--config", 8) == 0)
+					   || ((strncmp(argv[1], "-c", 2) == 0) & (strlen(argv[1]) == 2))) {
 				std::cerr << "Error in arguments: No config file provided\n ";
 				return false;
 			} else {
@@ -232,7 +235,7 @@ bool process_command_line(int argc, char** argv, std::string& config_file_path)
 			}
 		}
 		if (argc == 3) {
-			if ((strncmp(argv[1], "--config", 8) == 0) || (strncmp(argv[1], "-c", 2) == 0)) {
+			if ((strncmp(argv[1], "--config", 8) == 0) || ((strncmp(argv[1], "-c", 2) == 0) & (strlen(argv[1]) == 2))) {
 				config_file_path = std::string(argv[2]);
 			} else {
 				std::cerr << "Error in arguments: '" << argv[1] << "' not understood\n ";
@@ -356,6 +359,8 @@ int main(int argc, char* argv[])
 
 	std::string	  metadata_yaml_file_path = out_file_path.substr(0, out_file_path.size() - 4) + ".metadata";
 	std::ofstream fout(metadata_yaml_file_path);
+
+	fout << "created by " << SHORT_NAME << " " << get_version_info() << " build on " << __DATE__ << " at " << __TIME__
+		 << "\n";
 	fout << config;
-	fout << "\n created by" << get_version_info() << " build on " << __DATE__ << " at " << __TIME__ << "\n";
 }

@@ -76,9 +76,10 @@ void threed::read_las_file(const std::string las_file_path, threed::PointCloud& 
 			int32_t z_raw = *reinterpret_cast<int32_t*>(&buffer[i * pointSize + 8]);
 
 			// Store raw values without scaling, for faster loading
-			point_cloud.data.push_back({ static_cast<double>(static_cast<double>(x_raw) * scales.x),
-										 static_cast<double>(static_cast<double>(y_raw) * scales.y),
-										 static_cast<double>(static_cast<double>(z_raw) * scales.z) });
+			point_cloud.data.push_back(
+				{ static_cast<double>(static_cast<double>(x_raw) * scales.x) - point_cloud.offsets[0],
+				  static_cast<double>(static_cast<double>(y_raw) * scales.y) - point_cloud.offsets[1],
+				  static_cast<double>(static_cast<double>(z_raw) * scales.z) - point_cloud.offsets[2] });
 		}
 
 		points_read += points_to_read;
@@ -93,7 +94,7 @@ void threed::read_las_file(const std::string las_file_path, threed::PointCloud& 
  * @param out_file_name out npy file path
  * @param out_features features in std::vector<std::vector<float>>
  */
-void threed::write_features(std::string out_file_name, const std::vector<std::vector<float>>& out_features)
+void threed::write_features(std::string out_file_name, const std::vector<std::vector<double>>& out_features)
 {
 	std::cout << "-> Writing the file ..." << out_file_name.substr(out_file_name.size() - 15, out_file_name.size())
 			  << " ...";
@@ -108,8 +109,8 @@ void threed::write_features(std::string out_file_name, const std::vector<std::ve
 	size_t row = out_features.size();
 	size_t col = out_features[0].size();
 
-	std::vector<float> data(row * col);
-	size_t			   counter = 0;
+	std::vector<double> data(row * col);
+	size_t				counter = 0;
 	for (size_t i = 0; i < row; i++) {
 		for (size_t j = 0; j < col; j++) {
 			data[counter] = out_features[i][j];

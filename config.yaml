@@ -7,7 +7,7 @@ files:
 # define neighborhood information
 neighborhood:
   name      : "radius"    # [knn,radius] default radius, use knn otherwise
-  engine    : "gpu"       # [gpu, cpu] gpu is pcl/gpu/octree, cpu is nanoflann
+  engine    : "cpu"       # [gpu, cpu] gpu is pcl/gpu/octree, cpu is nanoflann
   radius    : 0.25         # radius range
   k         : 8           # number of points in knn search
   batch_size: 65536       # valid in pcl gpu range search
@@ -21,4 +21,4 @@ features:            # geometry is the default (9) features
 
 # global params
 params:
-  num_threads: 6      # used in every paralel loop
+  num_threads: 1      # used in every paralel loop
