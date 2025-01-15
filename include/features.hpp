@@ -11,10 +11,6 @@
 
 #include "timer.hpp"
 
-// #include <pcl/common/pca.h>
-// #include <pcl/point_cloud.h>
-// #include <pcl/point_types.h>
-
 #include "file_io.hpp"
 
 #define NUM_GEOMETRIC_FEATURES 9

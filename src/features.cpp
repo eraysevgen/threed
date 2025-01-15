@@ -23,23 +23,7 @@ Eigen::Matrix3d compute_covariance_matrix(const std::vector<std::array<double, 3
 	Eigen::MatrixXd	   center = data.rowwise() - mean;
 
 	Eigen::Matrix3d cov = (center.transpose() * center) / static_cast<double>(num_points - 1);
-	/*
-	Eigen::Vector3d mean(0.0, 0.0, 0.0);
 
-	for (const auto& point : points) {
-		mean[0] += point[0];
-		mean[1] += point[1];
-		mean[2] += point[2];
-	}
-	mean /= static_cast<double>(points.size());
-
-	Eigen::Matrix3d cov = Eigen::Matrix3d::Zero();
-	for (const auto& point : points) {
-		Eigen::Vector3d center(point[0] - mean.x(), point[1] - mean.y(), point[2] - mean.z());
-		cov += center * center.transpose();
-	}
-	cov /= static_cast<double>(points.size() - 1);
-	*/
 	return cov;
 }
 /**
@@ -74,14 +58,12 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 	auto process_point = [&](size_t idx) {
 		size_t num_neighbors = neighborhood_indices[idx].size();
 
-		// TODO fix here, add height or others , correct number of geometric features
 		if (num_neighbors < 3) {
 
-			// threed::make_the_vector_zeros(features[idx], NUM_GEOMETRIC_FEATURES); // Geometric features
 			threed::make_the_vector_nan(features[idx], NUM_GEOMETRIC_FEATURES);
 
 			if (add_height)
-				// threed::make_the_vector_zeros(features[idx], NUM_HEIGHT_FEATURES); // Height features
+
 				threed::make_the_vector_nan(features[idx], NUM_HEIGHT_FEATURES);
 			if (add_density) {
 				features[idx].push_back(static_cast<float>(num_neighbors));
@@ -98,21 +80,9 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 		std::vector<std::array<double, 3>> neighbors;
 		neighbors.reserve(num_neighbors);
 
-		// pcl::PointCloud<pcl::PointXYZ>::Ptr neighbors(new pcl::PointCloud<pcl::PointXYZ>);
-		// neighbors->width  = num_neighbors;
-		// neighbors->height = 1;
-		// neighbors->resize(num_neighbors);
-
-		// std::vector<double> neighbor_heights;
-		// neighbor_heights.reserve(num_neighbors);
-
 		for (size_t j = 0; j < num_neighbors; ++j) {
 			size_t		neighbor_index = neighborhood_indices[idx][j];
 			const auto& neighbor	   = host_point_cloud.data[neighbor_index];
-			// neighbors->points[j]	   = pcl::PointXYZ(static_cast<float>(neighbor[0]),
-			// static_cast<float>(neighbor[1]),
-			//										   static_cast<float>(neighbor[2]));
-			// neighbor_heights[j]		   = static_cast<float>(neighbor[2]);
 
 			neighbors.emplace_back(std::array<double, 3>({ neighbor[0], neighbor[1], neighbor[2] }));
 		}
@@ -124,26 +94,6 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 		}
 		Eigen::Vector3d eigenvalues	 = solver.eigenvalues();
 		Eigen::Matrix3d eigenvectors = solver.eigenvectors();
-
-		/* no need to sort them, they are in ascending order
-		std::vector<std::pair<double, Eigen::Vector3d>> eigen_pairs;
-		for (int i = 0; i < 3; ++i) {
-			eigen_pairs.emplace_back(eigenvalues(i), eigenvectors.col(i));
-		}
-
-		std::sort(eigen_pairs.begin(), eigen_pairs.end(),
-				  [](const auto& a, const auto& b) { return a.first > b.first; });
-
-		for (int i = 0; i < 3; ++i) {
-			eigenvalues(i)		= eigen_pairs[i].first;
-			eigenvectors.col(i) = eigen_pairs[i].second;
-		}
-		*/
-		// compute_eigen()
-		// pcl::PCA<pcl::PointXYZ> pca;
-		// pca.setInputCloud(neighbors);
-		// Eigen::Vector3f eigenvalues	 = pca.getEigenValues();
-		// Eigen::Matrix3f eigenvectors = pca.getEigenVectors();
 
 		threed::compute_geometric_features(eigenvalues, eigenvectors, features[idx], "sqrt");
 
