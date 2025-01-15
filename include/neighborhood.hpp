@@ -72,22 +72,16 @@ struct NFlannPointCloudAdaptor {
 			bb = {};
 		else {
 			for (size_t j = 0; j < 3; ++j) {
-				// double val = point_cloud.data[0][j];
+
 				bb[j].low  = std::numeric_limits<double>::max();  // val;
 				bb[j].high = -std::numeric_limits<double>::max(); // val;
 			}
 
 			for (size_t i = 1; i < point_cloud.data.size(); ++i) {
 				for (size_t j = 0; j < 3; ++j) {
-					// double val = point_cloud.data[i][j];
+
 					bb[j].low  = std::min(bb[j].low, point_cloud.data[i][j]);
 					bb[j].high = std::max(bb[j].high, point_cloud.data[i][j]);
-					/*
-					if (val < bb[j].low)
-						bb[j].low = val;
-					if (val > bb[j].high)
-						bb[j].high = val;
-					*/
 				}
 			}
 		}
