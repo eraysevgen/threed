@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.5.0)
-project(threed VERSION 2.1.2 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.10.0)
+cmake_policy(SET CMP0167 OLD)
+project(threed VERSION 2.1.4 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,8 +22,8 @@ include_directories(
     ${CNPY_MAIN}
   )
 
-
-#find_package(Boost REQUIRED COMPONENTS program_options filesystem REQUIRED)
+#find_package(Boost REQUIRED COMPONENTS iostreams REQUIRED)
+set(Boost_NO_BOOST_CMAKE ON)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(nanoflann)
@@ -65,14 +66,7 @@ add_executable(${PROJECT_NAME}
   ${MAIN_HEADER}
   )
 
-  
-
-#target_compile_settings(${PROJECT_NAME})
 target_compile_settings(lazperf)
-
-#target_link_libraries(${PROJECT_NAME} 
-#                        PRIVATE Boost::boost Boost::program_options
-#                        PRIVATE Boost::boost Boost::filesystem)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC yaml-cpp::yaml-cpp) 
 target_link_libraries(${PROJECT_NAME} PUBLIC nanoflann::nanoflann)
@@ -80,7 +74,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${PCL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC cnpy)
 target_link_libraries(${PROJECT_NAME} PUBLIC lazperf)
 
-# do need to move config files
+
+# move config file
 set (MOVE_CONFIG ON)
 if (MOVE_CONFIG)
 add_custom_command(

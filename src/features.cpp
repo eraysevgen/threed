@@ -11,20 +11,23 @@
  */
 Eigen::Matrix3d compute_covariance_matrix(const std::vector<std::array<double, 3>>& points)
 {
-	size_t			num_points = points.size();
-	Eigen::MatrixXd data(num_points, 3);
-	for (size_t i = 0; i < num_points; ++i) {
-		for (size_t j = 0; j < 3; ++j) {
-			data(i, j) = points[i][j];
-		}
+	size_t num_points = points.size();
+
+	if (num_points < 2) {
+		return Eigen::Matrix3d::Zero();
 	}
 
-	Eigen::RowVector3d mean	  = data.colwise().mean();
-	Eigen::MatrixXd	   center = data.rowwise() - mean;
+	using MapType = Eigen::Map<const Eigen::Matrix<double, 3, Eigen::Dynamic>>;
 
-	Eigen::Matrix3d cov = (center.transpose() * center) / static_cast<double>(num_points - 1);
+	MapType			data(points.data()->data(), 3, num_points);
+	Eigen::Vector3d mean = data.rowwise().mean();
 
-	return cov;
+	Eigen::Matrix3d cov = Eigen::Matrix3d::Zero();
+	for (size_t i = 0; i < num_points; ++i) {
+		Eigen::Vector3d centered_point = data.col(i) - mean;
+		cov.noalias() += centered_point * centered_point.transpose();
+	}
+	return cov / static_cast<double>(num_points - 1);
 }
 /**
  * @brief
@@ -113,21 +116,28 @@ void threed::compute_features(const threed::PointCloud&				  host_point_cloud,
 			features[idx].push_back(static_cast<float>(query_point[2]));
 		}
 	};
-	double completed_percentage;
-	auto   process_computation = [&]() {
-		  while (true) {
-			  size_t idx = next_index.fetch_add(1);
-			  if (idx >= num_points)
-				  break;
 
-			  if (((idx % 10000) == 0) || (idx - 1 == num_points)) {
-				  completed_percentage = (static_cast<double>(idx) / static_cast<double>(num_points)) * 100.0f;
+	const size_t chunk_size = 512;
 
-				  std::cout << "\r-> Computing features ... %" << std::setprecision(0) << std::fixed
-							<< completed_percentage;
-			  }
-			  process_point(idx);
-		  }
+	auto process_computation = [&]() {
+		while (true) {
+			size_t start_idx = next_index.fetch_add(chunk_size);
+			if (start_idx >= num_points)
+				break;
+
+			size_t end_idx = std::min(start_idx + chunk_size, num_points);
+
+			if ((start_idx % 10000) < chunk_size || end_idx == num_points) {
+				double completed_percentage
+					= (static_cast<double>(start_idx) / static_cast<double>(num_points)) * 100.0f;
+
+				std::cout << "\r-> Computing features ... %" << std::setprecision(0) << std::fixed
+						  << completed_percentage << std::flush;
+			}
+			for (size_t idx = start_idx; idx < end_idx; ++idx) {
+				process_point(idx);
+			}
+		}
 	};
 
 	std::vector<std::thread> threads;

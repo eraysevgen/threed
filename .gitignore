@@ -3,7 +3,7 @@ data/*
 .vscode/settings.json
 .results/*
 .benchmark/*
-
+.out*
 # Prerequisites
 *.d
 

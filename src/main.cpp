@@ -37,8 +37,8 @@
  */
 #define MAJOR_VERSION 2
 #define MINOR_VERSION 1
-#define PATCH_VERSION 3
-#define BUILD_VERSION ""
+#define PATCH_VERSION 4
+#define BUILD_VERSION " "
 #define AUTHOR "Eray Sevgen"
 #define DESCRIPTION "A program for feature extraction from 3D point cloud data"
 #define SHORT_NAME "threed.exe"
@@ -52,7 +52,7 @@ std::string get_version_info()
 {
 	std::string main_version_info = "v" + std::to_string(MAJOR_VERSION) + "." + std::to_string(MINOR_VERSION) + "."
 		+ std::to_string(PATCH_VERSION);
-	if (BUILD_VERSION != "")
+	if (BUILD_VERSION != " ")
 		return main_version_info + "-" + BUILD_VERSION;
 	else
 		return main_version_info;
@@ -357,10 +357,10 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	std::string	  metadata_yaml_file_path = out_file_path.substr(0, out_file_path.size() - 4) + ".metadata";
+	std::string	  metadata_yaml_file_path = out_file_path.substr(0, out_file_path.size() - 4) + "_config.yaml";
 	std::ofstream fout(metadata_yaml_file_path);
 
-	fout << "created by " << SHORT_NAME << " " << get_version_info() << " build on " << __DATE__ << " at " << __TIME__
+	fout << "# created by " << SHORT_NAME << " " << get_version_info() << " build on " << __DATE__ << " at " << __TIME__
 		 << "\n";
 	fout << config;
 }
