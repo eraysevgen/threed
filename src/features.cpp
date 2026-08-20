@@ -1,8 +1,14 @@
 #include "features.hpp"
 #include "timer.hpp"
+
+#include <algorithm>
+#include <array>
 #include <atomic>
 #include <cmath>
+#include <iomanip>
+#include <iostream>
 #include <mutex>
+#include <numeric>
 #include <thread>
 /**
  * @brief compute covariance matrix from a set of 3D point clouds

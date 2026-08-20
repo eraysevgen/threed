@@ -1,0 +1,14 @@
+[build-system]
+requires = ["scikit-build-core>=0.8.0", "nanobind>=1.9.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "threed_py"
+version = "2.1.4"
+description = "Python binding interface for the threed C++ point cloud feature extraction engine"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Eray Sevgen" }]
+
+[tool.scikit-build]
+cmake.source-dir = "python"

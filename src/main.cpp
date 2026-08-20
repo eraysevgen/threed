@@ -26,9 +26,11 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "cpu_neighborhood.hpp"
 #include "features.hpp"
 #include "file_io.hpp"
-#include "neighborhood.hpp"
+#include "gpu_neighborhood.hpp"
+#include "point_cloud.hpp"
 #include "timer.hpp"
 
 /**

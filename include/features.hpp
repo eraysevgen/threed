@@ -1,17 +1,10 @@
 #ifndef FEATURES_HPP_
 #define FEATURES_HPP_
 
-#include <algorithm>
-#include <array>
-#include <iostream>
-#include <numeric>
-#include <vector>
-
+#include "point_cloud.hpp"
 #include <Eigen/Dense>
-
-#include "timer.hpp"
-
-#include "file_io.hpp"
+#include <cstddef>
+#include <vector>
 
 #define NUM_GEOMETRIC_FEATURES 9
 #define NUM_HEIGHT_FEATURES 5

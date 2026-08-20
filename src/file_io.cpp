@@ -1,5 +1,17 @@
 #include "file_io.hpp"
 
+#include "header.hpp"
+#include "las.hpp"
+#include "readers.hpp"
+
+#include "cnpy.h"
+#include "timer.hpp"
+
+#include <cstddef>
+#include <filesystem>
+#include <iostream>
+#include <vector>
+
 /**
  * @brief Read the point cloud file
  * @param file_path las/laz file path

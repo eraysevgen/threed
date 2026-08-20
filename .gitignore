@@ -4,6 +4,7 @@ data/*
 .results/*
 .benchmark/*
 .out*
+.venv*
 # Prerequisites
 *.d
 

@@ -50,7 +50,8 @@ add_library(lazperf
 
 set(MAIN_SRC 
   ${PROJECT_SOURCE_DIR}/src/file_io.cpp
-  ${PROJECT_SOURCE_DIR}/src/neighborhood.cpp
+  ${PROJECT_SOURCE_DIR}/src/gpu_neighborhood.cpp
+  ${PROJECT_SOURCE_DIR}/src/cpu_neighborhood.cpp
   ${PROJECT_SOURCE_DIR}/src/features.cpp
 )
 
@@ -58,7 +59,12 @@ set(MAIN_HEADER
   ${PROJECT_SOURCE_DIR}/include/timer.hpp
   ${PROJECT_SOURCE_DIR}/include/file_io.hpp
   ${PROJECT_SOURCE_DIR}/include/features.hpp
-  ${PROJECT_SOURCE_DIR}/include/neighborhood.hpp)
+  ${PROJECT_SOURCE_DIR}/include/point_cloud.hpp
+  ${PROJECT_SOURCE_DIR}/include/nflann_adaptor.hpp
+  ${PROJECT_SOURCE_DIR}/include/cpu_neighborhood.hpp
+  ${PROJECT_SOURCE_DIR}/include/gpu_neighborhood.hpp
+  
+  )
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
