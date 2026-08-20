@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10.0)
 cmake_policy(SET CMP0167 OLD)
-project(threed VERSION 2.1.4 LANGUAGES CXX)
+project(threed VERSION 2.1.5 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
